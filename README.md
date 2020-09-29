@@ -1,3 +1,7 @@
+This is a Fork of Check Game Firmware (CGFw) from OfficialAhmed
+link: https://github.com/OfficialAhmed/Check-Game-Firmware
+
+INFO FROM OfficialAhmed GIT:
 # Check Game Firmware (CGFw) 
 Ever wondered which system version a PS4 game requires? well this project is helpful for you.
 
