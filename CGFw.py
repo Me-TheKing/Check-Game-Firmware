@@ -1,8 +1,12 @@
-import requests, re
-from bs4 import BeautifulSoup as bs
-from colorama import Fore, Back, Style, init
+import re
+# import sys
+import time
+import requests
+from bs4 import BeautifulSoup as Bs
+from colorama import Fore, init
 
 init(autoreset=True)
+ver = 1.01
 
 
 def result(playable, current_fw, game_day, game_month, game_year):
@@ -17,44 +21,44 @@ def result(playable, current_fw, game_day, game_month, game_year):
         print(f'{Fore.YELLOW}"Unplayable on {current_fw[0]} unless the game was built on an older SDK\n')
 
 
+def loop_ans(question, ans_lst):
+    ans = input(question).lower()
+    # to convert any num to str
+    ans_lst = list(map(str, ans_lst))
+
+    while ans not in ans_lst:
+        print("Invalid input...")
+        ans = input(question).lower()
+
+    return ans
+
+
 def main():
     month = {"January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6, "July": 7, "August": 8,
              "September": 9, "October": 10, "November": 11, "December": 12}
-    ver = 1.01
+
     with open("fw release date.ini", "r") as file:
         firmware = file.readlines()
-        line_num = 0
-        for line in range(len(firmware)):
-            current_line = firmware[line_num]
-            print(Fore.CYAN + str(line_num + 1) + ". " + current_line[:current_line.find(" ")])
-            line_num += 1
+        for num, firmware_num in enumerate(firmware):
+            print(f'{Fore.CYAN}{num + 1}. {firmware_num.split(" ")[0]}')
 
-        latest_fw = False
-        user_input = input("Choose a firmware[number exp: 1 or 2] or Q to quit:")
-        if user_input == "Q" or user_input == "q":
-            import sys, time
-            print(Fore.CYAN + "Thanks for using CGFw (Check Game Firmware) v" + str(ver) + " by @OfficialAhmed0. Bye!")
+        # latest_fw = False
+        user_input = loop_ans("Choose a firmware[number exp: 1 or 2] or Q to quit:",
+                              list(range(1, len(firmware) + 1)) + ['q'])
+        if user_input == "q":
+            print(f'{Fore.CYAN}Thanks for using CGFw (Check Game Firmware) v{ver} by @OfficialAhmed0. Bye!')
             time.sleep(3)
-            sys.exit()
-        while (user_input.isdigit() == False):
-            try:
-                user_input = int(user_input)
-            except:
-                print(Back.RED + "Choose line number[1, 2, 3... etc]")
-                user_input = input("Choose a firmware[number exp: 1 or 2] or Q to quit:")
+            raise SystemExit
+
         user_input = int(user_input) - 1
 
-        while (user_input >= len(firmware) or user_input < 0):
-            print("Invalid number...")
-            user_input = int(input("Choose a firmware[number exp: 1 or 2]:")) - 1
+        # if user_input == 0:  # This is the latest fw
+        #     latest_fw = True
 
-        if user_input == 0:  # This is the latest fw
-            latest_fw = True
-
-        elif user_input < len(firmware) and user_input >= 0:  # There is a later fw
+        if len(firmware) > user_input >= 0:  # There is a later fw
             try:
                 later_fw = firmware[user_input - 1].split(" ")
-                later_fw_ver = later_fw[0]
+                # later_fw_ver = later_fw[0]
                 later_fw_year = int(later_fw[3])
                 later_fw_month = month[later_fw[1]]
                 later_fw_day = int(later_fw[2])
@@ -63,15 +67,15 @@ def main():
 
         # From selected firmware
         current_fw = firmware[user_input].split(" ")
-        current_fw_year = int(current_fw[3])
-        current_fw_month = month[current_fw[1]]
-        current_fw_day = int(current_fw[2])
+        # current_fw_year = int(current_fw[3])
+        # current_fw_month = month[current_fw[1]]
+        # current_fw_day = int(current_fw[2])
 
         GameTitle = input("Enter Game title: ")
         search = GameTitle.replace(" ", "+") + "+Playstation+4+store"
         google = "https://www.google.com/search?hl=en&sxsrf=ALeKk008zPfPySZ73hbkXUMf_Az50hGTMA%3A1600888031936&ei=35xrX7G9OKPuxgOlyKvYBw&q=" + search
         read = requests.get(google).text
-        soup = bs(read, "html.parser")
+        soup = Bs(read, "html.parser")
 
         GameLink = []
         # Get game link for Playstation 4 store
@@ -108,22 +112,22 @@ def main():
                 if selected firmware's not the latest
                 otherwise all games would be playable
                 """
-                if latest_fw == False:  # If this is not the latest official firmware available
-                    if Game_year == later_fw_year:
-                        if Game_month <= later_fw_month:
-                            if Game_day <= later_fw_day:
-                                result("Yes", current_fw, Game_day, Game_month, Game_year)
-                            else:
-                                result("Yes", current_fw, Game_day, Game_month, Game_year)
+                # if latest_fw == False:  # If this is not the latest official firmware available
+                if Game_year == later_fw_year:
+                    if Game_month <= later_fw_month:
+                        if Game_day <= later_fw_day:
+                            result("Yes", current_fw, Game_day, Game_month, Game_year)
                         else:
-                            result("Not sure", current_fw, Game_year, Game_month, Game_day)
-                    elif Game_year < later_fw_year:
-                        result("Yes", current_fw, Game_day, Game_month, Game_year)
+                            result("Yes", current_fw, Game_day, Game_month, Game_year)
                     else:
-                        result("No", current_fw, Game_year, Game_month, Game_day)
-
-                else:  # If this is the latest official firmware available
+                        result("Not sure", current_fw, Game_year, Game_month, Game_day)
+                elif Game_year < later_fw_year:
                     result("Yes", current_fw, Game_day, Game_month, Game_year)
+                else:
+                    result("No", current_fw, Game_year, Game_month, Game_day)
+
+                # else:  # If this is the latest official firmware available
+                #     result("Yes", current_fw, Game_day, Game_month, Game_year)
             else:
                 print("Cannot find release date for", GameTitle)
         main()
